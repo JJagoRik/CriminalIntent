@@ -9,6 +9,7 @@ class CrimeTypeConverters {
         return date.time
     }
 
+
     @TypeConverter
     fun toDate(millisSinceEpoch: Long): Date {
         return Date(millisSinceEpoch)
