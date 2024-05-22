@@ -22,5 +22,8 @@
         <argument
             android:name="crimeId"
             app:argType="java.util.UUID" />
+        <action
+            android:id="@+id/show_crime_list"
+            app:destination="@id/crimeListFragment" />
     </fragment>
 </navigation>
