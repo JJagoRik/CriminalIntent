@@ -1,14 +1,17 @@
 package com.bignerdranch.android.criminalintent
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -16,10 +19,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bignerdranch.android.criminalintent.databinding.FragmentCrimeDetailBinding
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.util.Date
-import java.util.UUID
 
 
 private const val TAG = "CrimeDeatilFragment"
@@ -27,7 +28,7 @@ private const val TAG = "CrimeDeatilFragment"
 
 class CrimeDetailFragment : Fragment() {
 
-    private lateinit var crime: Crime
+    private lateinit var crimeRepository: CrimeRepository
     private var _binding: FragmentCrimeDetailBinding? = null
     private val args: CrimeDetailFragmentArgs by navArgs()
 
@@ -39,6 +40,11 @@ class CrimeDetailFragment : Fragment() {
         get() = checkNotNull(_binding){
             "Cannont access binding because it is null"
         }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -59,10 +65,6 @@ class CrimeDetailFragment : Fragment() {
                 }
             }
 
-            crimeDate.apply {
-                isEnabled = false
-            }
-
             crimeSolved.setOnCheckedChangeListener { _, isChecked ->
                 crimeDetailViewModel.updateCrime { oldCrime ->
                     oldCrime.copy(isSolved = isChecked)
@@ -78,7 +80,13 @@ class CrimeDetailFragment : Fragment() {
             }
         }
 
-        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner,
+        setFragmentResultListener(DatePickerFragment.REQUEST_KEY_DATE){ _, bundle ->
+            val newDate = bundle.getSerializable(DatePickerFragment.BUNDLE_KEY_DATE) as Date
+            crimeDetailViewModel.updateCrime { it.copy(date = newDate) }
+        }
+
+        requireActivity().onBackPressedDispatcher.addCallback(
+            viewLifecycleOwner,
             object : OnBackPressedCallback(true){
                 override fun handleOnBackPressed() {
                     if (binding.crimeTitle.text.toString() == ""){
@@ -89,7 +97,8 @@ class CrimeDetailFragment : Fragment() {
                         )
                     }
                 }
-            })
+            }
+        )
     }
 
     override fun onDestroyView() {
@@ -103,9 +112,32 @@ class CrimeDetailFragment : Fragment() {
                 crimeTitle.setText(crime.title)
             }
             crimeDate.text = crime.date.toString()
+            crimeDate.setOnClickListener {
+                findNavController().navigate(CrimeDetailFragmentDirections.selectDate(crime.date))
+            }
             crimeSolved.isChecked = crime.isSolved
         }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.fragment_crime_detail, menu)
+    }
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.del_crime -> {
+                deleteCrime()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun deleteCrime() {
+        findNavController().navigate(CrimeDetailFragmentDirections.showCrimeList())
+        viewLifecycleOwner.lifecycleScope.launch {
+            crimeDetailViewModel.delCrime(crimeDetailViewModel.crime.value!!)
+        }
+    }
 }

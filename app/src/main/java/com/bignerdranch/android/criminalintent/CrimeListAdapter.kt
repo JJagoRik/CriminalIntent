@@ -13,10 +13,12 @@ import android.text.format.DateFormat
 import java.util.UUID
 
 open class Holder(val binding: ViewBinding) : RecyclerView.ViewHolder(binding.root){
+
     open fun bind(crime: Crime, onCrimeClicked: (crimeId: UUID) -> Unit){}
 }
 
 class CrimeHolder(val bindingCrime: ListItemCrimeBinding) : Holder(bindingCrime){
+
     override fun bind(crime: Crime, onCrimeClicked: (crimeId: UUID) -> Unit){
         bindingCrime.crimeTitle.text = crime.title
         bindingCrime.crimeDate.text = DateFormat.format("EEEE, dd MMMM, yyyy", crime.date).toString()
@@ -34,6 +36,7 @@ class CrimeHolder(val bindingCrime: ListItemCrimeBinding) : Holder(bindingCrime)
 }
 
 class CrimePoliceHolder(val bindingPolice: ChallengeRequiresPoliceBinding) : Holder(bindingPolice){
+
     override fun bind(crime: Crime, onCrimeClicked: (crimeId: UUID) -> Unit){
         bindingPolice.crimeTitle.text = crime.title
         bindingPolice.crimeDate.text = crime.date.toString()
@@ -45,8 +48,10 @@ class CrimePoliceHolder(val bindingPolice: ChallengeRequiresPoliceBinding) : Hol
 }
 
 class CrimeListAdapter(
+
     private val crimes: List<Crime>,
     private val onCrimeClicked: (crimeId: UUID) -> Unit) : RecyclerView.Adapter<Holder>() {
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder {
         val inflater = LayoutInflater.from(parent.context)
         if (viewType == 0) {
