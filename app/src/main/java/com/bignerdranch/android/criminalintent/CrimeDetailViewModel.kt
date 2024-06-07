@@ -29,7 +29,7 @@ class CrimeDetailViewModel(crimeId: UUID) : ViewModel() {
         }
     }
 
-    suspend fun delCrime(crime: Crime){
+    suspend fun delCrime(crime: Crime) {
         crimeRepository.delCrime(crime)
     }
 
