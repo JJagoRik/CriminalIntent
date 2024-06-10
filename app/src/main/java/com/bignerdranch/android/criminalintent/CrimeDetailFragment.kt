@@ -6,7 +6,6 @@ import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
-import android.provider.ContactsContract.Contacts
 import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.Menu
@@ -16,8 +15,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResultListener
@@ -30,7 +29,6 @@ import androidx.navigation.fragment.navArgs
 import com.bignerdranch.android.criminalintent.databinding.FragmentCrimeDetailBinding
 import kotlinx.coroutines.launch
 import java.util.Date
-import java.util.function.DoubleUnaryOperator
 
 
 private const val TAG = "CrimeDeatilFragment"
@@ -39,7 +37,6 @@ private const val DATE_FORMAT = "EEE, MMM, dd"
 
 class CrimeDetailFragment : Fragment() {
 
-    private lateinit var crimeRepository: CrimeRepository
     private var _binding: FragmentCrimeDetailBinding? = null
     private val args: CrimeDetailFragmentArgs by navArgs()
 
@@ -52,6 +49,20 @@ class CrimeDetailFragment : Fragment() {
     ) { uri: Uri? ->
         uri?.let { parseContactSelection(it) }
     }
+
+    private val makePhoneCall = registerForActivityResult(
+        ActivityResultContracts.PickContact()
+    ) {}
+
+    private val requestPermissionLauncher =
+        registerForActivityResult(RequestPermission()) {isGranted: Boolean ->
+            if (isGranted) {
+                selectSuspect.launch(null)
+            } else {
+                Toast.makeText(requireContext(), "Permission denied", Toast.LENGTH_SHORT).show()
+            }
+        }
+
 
     private val binding
         get() = checkNotNull(_binding){
@@ -92,8 +103,20 @@ class CrimeDetailFragment : Fragment() {
                 selectSuspect.launch(null)
             }
 
+            crimeCall.setOnClickListener {
+                if (requireContext().checkSelfPermission(android.Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissionLauncher.launch(android.Manifest.permission.READ_CONTACTS)
+                } else {
+                    selectSuspect.launch(null)
+                    val intent = Intent(Intent.ACTION_DIAL)
+                    intent.data = Uri.parse("tel:${crimeDetailViewModel.suspectPhoneNumber}")
+                    startActivity(intent)
+                }
+            }
+
             val selectSuspectIntent = selectSuspect.contract.createIntent(requireContext(), null)
             crimeSuspect.isEnabled = canResolveIntent(selectSuspectIntent)
+            crimeCall.isEnabled = canResolveIntent(selectSuspectIntent)
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
@@ -184,7 +207,7 @@ class CrimeDetailFragment : Fragment() {
     private fun parseContactSelection(contactUri: Uri){
         val queryFields = arrayOf(ContactsContract.Contacts.DISPLAY_NAME)
 
-        val queryCursor = requireActivity().contentResolver
+        var queryCursor = requireActivity().contentResolver
             .query(contactUri, queryFields, null, null, null)
 
         queryCursor?.use { cursor ->
@@ -194,8 +217,59 @@ class CrimeDetailFragment : Fragment() {
                     oldCrime.copy(suspect = suspect)
                 }
             }
+
+            val phoneNumber = getPhoneNumber(contactUri)
+            if (phoneNumber != null) {
+                crimeDetailViewModel.suspectPhoneNumber = phoneNumber
+            }
         }
     }
+
+    private fun getPhoneNumber(contactUri: Uri): String? {
+        val queryFields = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
+
+        val queryCursor = requireActivity().contentResolver
+            .query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                queryFields,
+                ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                arrayOf(contactUri.lastPathSegment),
+                null
+            )
+
+        queryCursor?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                return cursor.getString(0)
+            }
+        }
+
+        return null
+    }
+//    private fun fetchPhoneNumber(contactId: String) {
+//        val phoneCursor = requireActivity().contentResolver.query(
+//            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+//            arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER),
+//            "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?",
+//            arrayOf(contactId),
+//            null
+//        )
+//
+//        phoneCursor?.use { pc ->
+//            if (pc.moveToFirst()) {
+//                val phoneNumber = pc.getString(pc.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER))
+//                dialPhoneNumber(phoneNumber)
+//            }
+//        }
+//    }
+//
+//    private fun dialPhoneNumber(phoneNumber: String) {
+//        val intent = Intent(Intent.ACTION_DIAL).apply {
+//            data = Uri.parse("tel:$phoneNumber")
+//        }
+//        if (intent.resolveActivity(requireActivity().packageManager) != null) {
+//            startActivity(intent)
+//        }
+//    }
 
     private fun canResolveIntent(intent: Intent): Boolean {
         val packageManager: PackageManager = requireActivity().packageManager

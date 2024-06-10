@@ -1,5 +1,6 @@
 [versions]
 agp = "8.3.2"
+androidxFragmentKtx = "1.7.1"
 constraintlayoutVersion = "2.1.3"
 fragmentKtx = "1.6.2"
 fragmentKtxVersion = "1.4.1"
@@ -18,6 +19,7 @@ androidx-constraintlayout-v213 = { module = "androidx.constraintlayout:constrain
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragmentKtx" }
 androidx-fragment-ktx-v141 = { module = "androidx.fragment:fragment-ktx", version.ref = "fragmentKtxVersion" }
+androidx-fragment-ktx-v171 = { module = "androidx.fragment:fragment-ktx", version.ref = "androidxFragmentKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
