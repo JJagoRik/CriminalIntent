@@ -28,6 +28,9 @@
         <action
             android:id="@+id/select_date"
             app:destination="@id/datePickerFragment" />
+        <action
+            android:id="@+id/show_fullscreen_photo"
+            app:destination="@id/fullScreenDialogFragment" />
     </fragment>
     <dialog
         android:id="@+id/datePickerFragment"
@@ -36,5 +39,13 @@
         <argument
             android:name="crimeDate"
             app:argType="java.util.Date" />
+    </dialog>
+    <dialog
+        android:id="@+id/fullScreenDialogFragment"
+        android:name="com.bignerdranch.android.criminalintent.FullScreenDialogFragment"
+        android:label="FullScreenDialogFragment" >
+        <argument
+            android:name="crimePhotoId"
+            app:argType="string" />
     </dialog>
 </navigation>

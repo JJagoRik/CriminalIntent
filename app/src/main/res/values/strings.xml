@@ -20,4 +20,5 @@
     <string name="crime_report_subject">CriminalIntent Crime Report</string>
     <string name="send_report">Send crime report via</string>
     <string name="phone_call">Call suspect</string>
+    <string name="fullscreen_image">Fullscreen Image</string>
 </resources>
