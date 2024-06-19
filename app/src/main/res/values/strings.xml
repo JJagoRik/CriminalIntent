@@ -21,4 +21,9 @@
     <string name="send_report">Send crime report via</string>
     <string name="phone_call">Call suspect</string>
     <string name="fullscreen_image">Fullscreen Image</string>
+    <string name="crime_photo_button_description">Take photo of crime scene</string>
+    <string name="crime_photo_no_image_description">
+        Crime scene photo (not set)
+    </string>
+    <string name="crime_photo_image_description">Crime scene photo (set)</string>
 </resources>
